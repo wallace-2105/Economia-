@@ -1,7 +1,7 @@
 /* ==========================================================================
    NAVEGAÇÃO ENTRE TELAS
    ========================================================================== */
-function mostrarTela(nomeTela) {
+function mostrarTela(nomeTela, rolarTopo = true) {
   telaAtual = nomeTela;
   document.querySelectorAll(".screen").forEach(sec => sec.classList.remove("active"));
   if (nomeTela === "home") {
@@ -20,7 +20,9 @@ function mostrarTela(nomeTela) {
     document.getElementById("screenFinalResult").classList.add("active");
     renderizarResultadoGeral();
   }
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (rolarTopo) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 }
 
 function abrirAreaEnsino(numBloco = 0) {
@@ -28,26 +30,22 @@ function abrirAreaEnsino(numBloco = 0) {
   mostrarTela("study");
 }
 
-function abrirBloco(numBloco, indiceInicial = null) {
+function abrirBloco(numBloco, indiceParaRolar = null) {
   blocoAtivo = numBloco;
-  const questoes = obterQuestoesDoBloco(numBloco);
+  mostrarTela("quiz", indiceParaRolar === null);
 
-  if (indiceInicial !== null && indiceInicial >= 0 && indiceInicial < questoes.length) {
-    indiceQuestaoAtiva = indiceInicial;
-  } else {
-    // Procura a primeira questão ainda não respondida; se todas foram, abre a primeira
-    const idxNaoRespondida = questoes.findIndex(q => {
-      if (q.tipo === "objetiva") return !obterEstadoObjetiva(q.id).confirmada;
-      return !obterEstadoDiscursiva(q.id).respondida;
-    });
-    indiceQuestaoAtiva = idxNaoRespondida !== -1 ? idxNaoRespondida : 0;
+  if (indiceParaRolar !== null) {
+    setTimeout(() => {
+      const cardEl = document.getElementById(`questao-card-${indiceParaRolar}`);
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 60);
   }
-
-  mostrarTela("quiz");
 }
 
 /* ==========================================================================
-   EVENTOS GLOBAIS E ATALHOS DE TECLADO
+   EVENTOS GLOBAIS
    ========================================================================== */
 function inicializarEventos() {
   // Navegação Topo e Área de Ensino
@@ -82,25 +80,29 @@ function inicializarEventos() {
     mostrarTela("blockResult");
   });
 
-  // Botões Anterior e Próxima
-  document.getElementById("btnPrevQuestion").addEventListener("click", () => {
-    if (indiceQuestaoAtiva > 0) {
-      indiceQuestaoAtiva--;
-      renderizarTelaQuiz();
-    }
-  });
+  // Botões na barra inferior da lista de questões do bloco
+  const btnPrev = document.getElementById("btnPrevQuestion");
+  if (btnPrev) {
+    btnPrev.addEventListener("click", () => {
+      mostrarTela("home");
+    });
+  }
 
-  document.getElementById("btnNextQuestion").addEventListener("click", () => {
-    const questoes = obterQuestoesDoBloco(blocoAtivo);
-    if (indiceQuestaoAtiva < questoes.length - 1) {
-      indiceQuestaoAtiva++;
-      renderizarTelaQuiz();
-    } else {
+  const btnScrollTop = document.getElementById("btnScrollTopQuiz");
+  if (btnScrollTop) {
+    btnScrollTop.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  const btnNext = document.getElementById("btnNextQuestion");
+  if (btnNext) {
+    btnNext.addEventListener("click", () => {
       estado.blocosFinalizados[blocoAtivo] = true;
       salvarEstado();
       mostrarTela("blockResult");
-    }
-  });
+    });
+  }
 
   // Modal de Zerar Progresso
   const resetModal = document.getElementById("resetModal");
@@ -119,49 +121,6 @@ function inicializarEventos() {
     salvarEstado();
     resetModal.classList.remove("active");
     mostrarTela("home");
-  });
-
-  // Atalhos de teclado: A-E selecionam, Enter confirma, Setas navegam
-  window.addEventListener("keydown", e => {
-    if (telaAtual !== "quiz") return;
-
-    // Ignora atalhos quando o aluno está digitando na caixa de texto discursiva
-    const tagAtiva = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
-    if (tagAtiva === "textarea" || tagAtiva === "input") return;
-
-    const questoes = obterQuestoesDoBloco(blocoAtivo);
-    const questaoAtual = questoes[indiceQuestaoAtiva];
-
-    const tecla = e.key.toUpperCase();
-    const mapaLetras = { A: 0, B: 1, C: 2, D: 3, E: 4 };
-
-    if (questaoAtual.tipo === "objetiva" && mapaLetras.hasOwnProperty(tecla)) {
-      e.preventDefault();
-      const st = obterEstadoObjetiva(questaoAtual.id);
-      if (!st.confirmada) {
-        st.selecionada = mapaLetras[tecla];
-        salvarEstado();
-        renderizarTelaQuiz();
-      }
-    } else if (e.key === "Enter" && questaoAtual.tipo === "objetiva") {
-      const st = obterEstadoObjetiva(questaoAtual.id);
-      if (!st.confirmada && st.selecionada !== null) {
-        e.preventDefault();
-        confirmarQuestaoObjetiva(questaoAtual);
-      }
-    } else if (e.key === "ArrowLeft") {
-      if (indiceQuestaoAtiva > 0) {
-        e.preventDefault();
-        indiceQuestaoAtiva--;
-        renderizarTelaQuiz();
-      }
-    } else if (e.key === "ArrowRight") {
-      if (indiceQuestaoAtiva < questoes.length - 1) {
-        e.preventDefault();
-        indiceQuestaoAtiva++;
-        renderizarTelaQuiz();
-      }
-    }
   });
 }
 

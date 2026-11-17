@@ -995,3 +995,59 @@ body {
 .study-topic-list li {
   margin-bottom: 0.45rem;
 }
+
+/* ==========================================================================
+   LISTA CONTÍNUA DE QUESTÕES E DESTAQUE VERDE/VERMELHO NOS CARDS (MOBILE-FIRST)
+   ========================================================================== */
+.questions-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.question-card {
+  scroll-margin-top: 90px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.question-card.card-correct {
+  border: 2px solid var(--success);
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.12);
+}
+
+.question-card.card-wrong {
+  border: 2px solid var(--danger);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.12);
+}
+
+.status-pill-card {
+  margin-left: auto;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.22rem 0.65rem;
+  border-radius: 999px;
+}
+
+.status-pill-card.correct {
+  background: var(--success);
+  color: #ffffff;
+}
+
+.status-pill-card.wrong {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .main-container {
+    padding: 1rem 0.75rem 2.5rem;
+  }
+  .option-item {
+    padding: 0.85rem;
+    font-size: 0.95rem;
+  }
+  .question-statement {
+    font-size: 1rem;
+  }
+}

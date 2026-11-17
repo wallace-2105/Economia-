@@ -14,7 +14,7 @@ function renderizarTelaInicial() {
     // No Modo Prova, só exibe os acertos se o bloco já foi finalizado
     const ocultarAcertosModoProva = estado.modo === "prova" && !estado.blocosFinalizados[bloco.numero];
     const textoAcertos = ocultarAcertosModoProva
-      ? `${resumo.objetivasConfirmadas}/10 confirmadas (Modo Prova)`
+      ? `${resumo.objetivasConfirmadas}/10 respondidas (Modo Prova)`
       : `${resumo.acertosObjetivas}/10`;
 
     const card = document.createElement("div");
@@ -80,22 +80,20 @@ function renderizarTelaInicial() {
 }
 
 /* ==========================================================================
-   RENDERIZAÇÃO: TELA DE QUESTÃO (DENTRO DO BLOCO)
+   RENDERIZAÇÃO: LISTA CONTÍNUA DE QUESTÕES DO BLOCO (UMA ABAIXO DA OUTRA)
    ========================================================================== */
-function renderizarTelaQuiz() {
+function atualizarCabecalhoProgressoBloco() {
   const infoBloco = BLOCOS_INFO.find(b => b.numero === blocoAtivo);
   const questoes = obterQuestoesDoBloco(blocoAtivo);
-  const questao = questoes[indiceQuestaoAtiva];
   const resumo = calcularResumoBloco(blocoAtivo);
 
   document.getElementById("quizBlockTitle").textContent = `Bloco ${infoBloco.numero}: ${infoBloco.titulo}`;
-  document.getElementById("quizBlockSubtitle").textContent = `Questão ${indiceQuestaoAtiva + 1} de ${questoes.length}`;
-  document.getElementById("quizProgressText").textContent = `Progresso do bloco: ${resumo.respondidasTotal}/${questoes.length} respondidas`;
+  document.getElementById("quizBlockSubtitle").textContent = `10 questões objetivas + 5 discursivas na mesma página (basta clicar na alternativa para responder)`;
+  document.getElementById("quizProgressText").textContent = `Progresso do bloco: ${resumo.respondidasTotal}/${questoes.length} respondidas (${resumo.acertosObjetivas}/10 acertos nas objetivas)`;
   document.getElementById("quizProgressFill").style.width = `${Math.round((resumo.respondidasTotal / questoes.length) * 100)}%`;
-  document.getElementById("questionCounterBottom").textContent = `Questão ${indiceQuestaoAtiva + 1} de ${questoes.length}`;
   atualizarBotoesModo();
 
-  // Renderiza bolinhas numeradas (1 a 15)
+  // Renderiza bolinhas numeradas (1 a 15) que rolam até a questão correspondente
   const pillsContainer = document.getElementById("questionPills");
   pillsContainer.innerHTML = "";
   const podeMostrarCoresGabarito = (estado.modo === "estudo") || estado.blocosFinalizados[blocoAtivo];
@@ -106,10 +104,6 @@ function renderizarTelaQuiz() {
     pill.className = "q-pill";
     pill.textContent = idx + 1;
     pill.title = `Ir para questão ${idx + 1} (${q.tipo === "objetiva" ? "Objetiva" : "Discursiva"})`;
-
-    if (idx === indiceQuestaoAtiva) {
-      pill.classList.add("current");
-    }
 
     if (q.tipo === "objetiva") {
       const st = obterEstadoObjetiva(q.id);
@@ -128,30 +122,34 @@ function renderizarTelaQuiz() {
     }
 
     pill.addEventListener("click", () => {
-      indiceQuestaoAtiva = idx;
-      renderizarTelaQuiz();
+      const cardEl = document.getElementById(`questao-card-${idx}`);
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     });
     pillsContainer.appendChild(pill);
   });
+}
 
-  // Renderiza o conteúdo da questão atual
-  const container = document.getElementById("questionContainer");
-  if (questao.tipo === "objetiva") {
-    renderizarQuestaoObjetiva(container, questao, indiceQuestaoAtiva);
-  } else {
-    renderizarQuestaoDiscursiva(container, questao, indiceQuestaoAtiva);
-  }
+function renderizarTelaQuiz() {
+  atualizarCabecalhoProgressoBloco();
 
-  // Botões Anterior e Próxima
-  const btnPrev = document.getElementById("btnPrevQuestion");
-  const btnNext = document.getElementById("btnNextQuestion");
-  btnPrev.disabled = indiceQuestaoAtiva === 0;
+  const questoes = obterQuestoesDoBloco(blocoAtivo);
+  const feedContainer = document.getElementById("questionContainer");
+  feedContainer.innerHTML = "";
 
-  if (indiceQuestaoAtiva === questoes.length - 1) {
-    btnNext.textContent = "Finalizar bloco ✓";
-  } else {
-    btnNext.textContent = "Próxima →";
-  }
+  questoes.forEach((questao, idx) => {
+    const cardWrapper = document.createElement("div");
+    cardWrapper.id = `questao-card-${idx}`;
+    cardWrapper.className = "question-card";
+    feedContainer.appendChild(cardWrapper);
+
+    if (questao.tipo === "objetiva") {
+      renderizarQuestaoObjetivaNoCard(cardWrapper, questao, idx);
+    } else {
+      renderizarQuestaoDiscursivaNoCard(cardWrapper, questao, idx);
+    }
+  });
 }
 
 function classeDificuldade(dif) {
@@ -160,7 +158,7 @@ function classeDificuldade(dif) {
   return "dificil";
 }
 
-function renderizarQuestaoObjetiva(container, questao, idx) {
+function renderizarQuestaoObjetivaNoCard(cardEl, questao, idx) {
   const st = obterEstadoObjetiva(questao.id);
   const letras = ["A", "B", "C", "D", "E"];
   const mostrarGabaritoAgora =
@@ -168,6 +166,19 @@ function renderizarQuestaoObjetiva(container, questao, idx) {
     (st.confirmada && (estado.modo === "estudo" || estado.blocosFinalizados[blocoAtivo]));
 
   const bloqueada = st.confirmada;
+
+  // Destaca o card inteiro em verde (acerto) ou vermelho (erro) quando corrigido
+  cardEl.classList.remove("card-correct", "card-wrong");
+  let seloStatusHTML = "";
+  if (mostrarGabaritoAgora && st.confirmada && st.selecionada !== null) {
+    if (st.selecionada === questao.correta) {
+      cardEl.classList.add("card-correct");
+      seloStatusHTML = `<span class="status-pill-card correct">✓ Acertou</span>`;
+    } else {
+      cardEl.classList.add("card-wrong");
+      seloStatusHTML = `<span class="status-pill-card wrong">✗ Errou</span>`;
+    }
+  }
 
   let opcoesHTML = "";
   questao.alternativas.forEach((textoAlt, i) => {
@@ -216,7 +227,6 @@ function renderizarQuestaoObjetiva(container, questao, idx) {
         </div>
       `;
     } else {
-      // Clicou em "Ver resposta" sem confirmar tentativa
       feedbackHTML = `
         <div class="feedback-box neutral">
           <div class="feedback-title">💡 Resposta correta: ${letraCorreta} — ${textoCorreta}</div>
@@ -227,70 +237,74 @@ function renderizarQuestaoObjetiva(container, questao, idx) {
   } else if (st.confirmada && estado.modo === "prova" && !estado.blocosFinalizados[blocoAtivo]) {
     feedbackHTML = `
       <div class="feedback-box neutral">
-        <div class="feedback-title">🔒 Resposta registrada (${letras[st.selecionada]})</div>
-        <div class="feedback-line">Você está no <strong>Modo Prova</strong>. Clique em <em>"Finalizar bloco"</em> para conferir o gabarito completo, ou use <em>"Ver resposta"</em> se desejar consultar agora.</div>
+        <div class="feedback-title">🔒 Alternativa ${letras[st.selecionada]} registrada</div>
+        <div class="feedback-line">No <strong>Modo Prova</strong>, o gabarito aparecerá ao clicar em <em>"Finalizar bloco"</em>.</div>
       </div>
     `;
   }
 
-  container.innerHTML = `
+  cardEl.innerHTML = `
     <div class="question-meta">
       <span class="tag">Questão ${idx + 1} • Objetiva</span>
       <span class="tag ${classeDificuldade(questao.dificuldade)}">${questao.dificuldade}</span>
       <span class="tag tipo">${questao.categoria}</span>
+      ${seloStatusHTML}
     </div>
     <div class="question-statement">${questao.enunciado}</div>
-    <div class="options-list" id="optionsList">${opcoesHTML}</div>
+    <div class="options-list">${opcoesHTML}</div>
     <div class="question-actions">
-      <button type="button" class="btn btn-primary" id="btnConfirmOption" ${bloqueada || st.selecionada === null ? "disabled" : ""}>
-        ${bloqueada ? "Resposta Confirmada" : "Confirmar (Enter)"}
-      </button>
-      <button type="button" class="btn btn-secondary" id="btnRevealAnswer">
+      <button type="button" class="btn btn-secondary" data-reveal-btn="1">
         ${st.revelouResposta ? "Ocultar resposta" : "Ver resposta"}
       </button>
+      ${st.confirmada ? `<button type="button" class="btn btn-secondary" data-retry-btn="1">↺ Refazer questão</button>` : ""}
     </div>
     ${feedbackHTML}
   `;
 
-  // Eventos das alternativas
-  container.querySelectorAll("[data-opt-index]").forEach(btn => {
+  // Ao tocar/clicar na alternativa, já confirma e mostra verde/vermelho na hora!
+  cardEl.querySelectorAll("[data-opt-index]").forEach(btn => {
     btn.addEventListener("click", () => {
       if (st.confirmada) return;
       st.selecionada = Number(btn.getAttribute("data-opt-index"));
+      st.confirmada = true;
       salvarEstado();
-      renderizarTelaQuiz();
+      renderizarQuestaoObjetivaNoCard(cardEl, questao, idx);
+      atualizarCabecalhoProgressoBloco();
     });
   });
 
-  // Evento Confirmar
-  const btnConfirm = document.getElementById("btnConfirmOption");
-  if (btnConfirm) {
-    btnConfirm.addEventListener("click", () => {
-      confirmarQuestaoObjetiva(questao);
-    });
-  }
-
-  // Evento Ver resposta
-  const btnReveal = document.getElementById("btnRevealAnswer");
+  // Botão Ver resposta
+  const btnReveal = cardEl.querySelector("[data-reveal-btn]");
   if (btnReveal) {
     btnReveal.addEventListener("click", () => {
       st.revelouResposta = !st.revelouResposta;
       salvarEstado();
-      renderizarTelaQuiz();
+      renderizarQuestaoObjetivaNoCard(cardEl, questao, idx);
+      atualizarCabecalhoProgressoBloco();
+    });
+  }
+
+  // Botão Refazer questão (caso tenha clicado sem querer no celular)
+  const btnRetry = cardEl.querySelector("[data-retry-btn]");
+  if (btnRetry) {
+    btnRetry.addEventListener("click", () => {
+      st.selecionada = null;
+      st.confirmada = false;
+      st.revelouResposta = false;
+      salvarEstado();
+      renderizarQuestaoObjetivaNoCard(cardEl, questao, idx);
+      atualizarCabecalhoProgressoBloco();
     });
   }
 }
 
-function confirmarQuestaoObjetiva(questao) {
-  const st = obterEstadoObjetiva(questao.id);
-  if (st.confirmada || st.selecionada === null) return;
-  st.confirmada = true;
-  salvarEstado();
-  renderizarTelaQuiz();
-}
-
-function renderizarQuestaoDiscursiva(container, questao, idx) {
+function renderizarQuestaoDiscursivaNoCard(cardEl, questao, idx) {
   const st = obterEstadoDiscursiva(questao.id);
+
+  cardEl.classList.remove("card-correct", "card-wrong");
+  if (st.respondida) {
+    cardEl.classList.add("card-correct");
+  }
 
   const pontosHTML = (questao.pontosChave || [])
     .map(p => `<li>${p}</li>`)
@@ -306,24 +320,24 @@ function renderizarQuestaoDiscursiva(container, questao, idx) {
     `
     : "";
 
-  container.innerHTML = `
+  cardEl.innerHTML = `
     <div class="question-meta">
       <span class="tag">Questão ${idx + 1} • Discursiva</span>
       <span class="tag tipo">Questão Aberta (${idx - 9} de 5)</span>
+      ${st.respondida ? `<span class="status-pill-card correct">✓ Respondida</span>` : ""}
     </div>
     <div class="question-statement">${questao.enunciado}</div>
     <div class="essay-area">
       <textarea
-        id="essayTextarea"
         class="essay-textarea"
         placeholder="Escreva sua resposta aqui... O texto é salvo automaticamente no navegador."
       ></textarea>
       <div class="essay-controls">
         <label class="checkbox-label">
-          <input type="checkbox" id="essayDoneCheckbox" ${st.respondida ? "checked" : ""} />
+          <input type="checkbox" class="essay-done-checkbox" ${st.respondida ? "checked" : ""} />
           <span>Marcar como respondida</span>
         </label>
-        <button type="button" class="btn btn-secondary" id="btnToggleModelAnswer">
+        <button type="button" class="btn btn-secondary btn-toggle-model">
           ${st.revelouModelo ? "Ocultar resposta modelo" : "Ver resposta modelo"}
         </button>
       </div>
@@ -331,25 +345,26 @@ function renderizarQuestaoDiscursiva(container, questao, idx) {
     ${modeloHTML}
   `;
 
-  const textarea = document.getElementById("essayTextarea");
+  const textarea = cardEl.querySelector(".essay-textarea");
   textarea.value = st.texto || "";
   textarea.addEventListener("input", e => {
     st.texto = e.target.value;
     salvarEstado();
   });
 
-  const checkbox = document.getElementById("essayDoneCheckbox");
+  const checkbox = cardEl.querySelector(".essay-done-checkbox");
   checkbox.addEventListener("change", e => {
     st.respondida = e.target.checked;
     salvarEstado();
-    renderizarTelaQuiz();
+    renderizarQuestaoDiscursivaNoCard(cardEl, questao, idx);
+    atualizarCabecalhoProgressoBloco();
   });
 
-  const btnModel = document.getElementById("btnToggleModelAnswer");
+  const btnModel = cardEl.querySelector(".btn-toggle-model");
   btnModel.addEventListener("click", () => {
     st.revelouModelo = !st.revelouModelo;
     salvarEstado();
-    renderizarTelaQuiz();
+    renderizarQuestaoDiscursivaNoCard(cardEl, questao, idx);
   });
 }
 
@@ -382,7 +397,7 @@ function renderizarResultadoBloco(numBloco) {
             <div style="font-size:0.84rem; color:var(--text-secondary); margin-top:0.25rem;">${statusTexto}</div>
           </div>
           <button type="button" class="btn btn-secondary" data-review-q="${item.indiceNoBloco}">
-            Revisar questão →
+            Ir para questão →
           </button>
         </div>
       `;
@@ -390,7 +405,7 @@ function renderizarResultadoBloco(numBloco) {
 
     revisaoHTML = `
       <h3 style="margin-top:1.25rem;">Questões para revisão (${resumo.erradas.length})</h3>
-      <p style="font-size:0.9rem; color:var(--text-secondary);">Clique em qualquer questão abaixo para voltar diretamente a ela e revisar a explicação.</p>
+      <p style="font-size:0.9rem; color:var(--text-secondary);">Toque em qualquer questão abaixo para voltar diretamente a ela no bloco.</p>
       <div class="wrong-list">${itensHTML}</div>
     `;
   }
@@ -425,7 +440,7 @@ function renderizarResultadoBloco(numBloco) {
   });
 
   document.getElementById("btnBlockResHome").addEventListener("click", () => mostrarTela("home"));
-  document.getElementById("btnBlockResReviewFirst").addEventListener("click", () => abrirBloco(numBloco, 0));
+  document.getElementById("btnBlockResReviewFirst").addEventListener("click", () => abrirBloco(numBloco, null));
   document.getElementById("btnBlockResFinal").addEventListener("click", () => mostrarTela("finalResult"));
 }
 
@@ -472,7 +487,7 @@ function renderizarResultadoGeral() {
       <div>
         <div style="font-size:0.9rem; color:var(--text-secondary);">Total Geral — Questões Objetivas</div>
         <div class="score-big">${totalAcertosObj}/40 (${percGeralObj}%)</div>
-        <div style="font-size:0.82rem; color:var(--text-muted);">${totalConfirmadasObj} de 40 objetivas confirmadas</div>
+        <div style="font-size:0.82rem; color:var(--text-muted);">${totalConfirmadasObj} de 40 objetivas respondidas</div>
       </div>
       <div>
         <div style="font-size:0.9rem; color:var(--text-secondary);">Total Geral — Discursivas Respondidas</div>
@@ -491,7 +506,7 @@ function renderizarResultadoGeral() {
 
   container.querySelectorAll("[data-open-block-final]").forEach(btn => {
     btn.addEventListener("click", () => {
-      abrirBloco(Number(btn.getAttribute("data-open-block-final")), 0);
+      abrirBloco(Number(btn.getAttribute("data-open-block-final")), null);
     });
   });
 
@@ -569,7 +584,7 @@ function renderizarAreaEnsino(numBloco = filtroBlocoEstudo) {
 
   container.querySelectorAll("[data-practice-from-study]").forEach(btn => {
     btn.addEventListener("click", () => {
-      abrirBloco(Number(btn.getAttribute("data-practice-from-study")), 0);
+      abrirBloco(Number(btn.getAttribute("data-practice-from-study")), null);
     });
   });
 }
