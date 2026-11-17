@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulado de Economia — Estudo Interativo</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- BARRA SUPERIOR FIXA -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand" id="brandHomeBtn" title="Voltar ao início">
+        <span class="brand-badge">E$</span>
+        <span>Simulado de Economia</span>
+      </div>
+
+      <div class="topbar-controls">
+        <div class="mode-switch" role="group" aria-label="Modo do simulado">
+          <button type="button" class="mode-btn active" id="modeEstudoBtn" title="Gabarito imediato ao confirmar">Modo Estudo</button>
+          <button type="button" class="mode-btn" id="modeProvaBtn" title="Gabarito liberado ao finalizar o bloco">Modo Prova</button>
+        </div>
+
+        <button type="button" class="icon-btn" id="btnVerResultadoGeralTop" title="Ver desempenho geral">
+          📊 Geral
+        </button>
+
+        <button type="button" class="icon-btn" id="themeToggleBtn" title="Alternar modo claro/escuro">
+          🌙 Tema
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="main-container">
+
+    <!-- 1. TELA INICIAL -->
+    <section id="screenHome" class="screen active">
+      <div class="hero-header">
+        <div class="hero-title">
+          <h1>Simulado de Economia</h1>
+          <p>4 blocos temáticos • 40 questões objetivas + 20 questões discursivas (60 questões no total)</p>
+        </div>
+        <div class="hero-actions">
+          <button type="button" class="btn btn-primary" id="btnResultadoGeralHome">Ver Resultado Geral</button>
+          <button type="button" class="btn btn-danger" id="btnResetAll">Zerar progresso</button>
+        </div>
+      </div>
+
+      <div class="blocks-grid" id="blocksGrid"></div>
+    </section>
+
+    <!-- 2. TELA DE QUESTÕES DO BLOCO -->
+    <section id="screenQuiz" class="screen">
+      <div class="quiz-top-nav">
+        <div class="block-header-info">
+          <h2 id="quizBlockTitle">Bloco 1</h2>
+          <span id="quizBlockSubtitle">Questão 1 de 15</span>
+        </div>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <button type="button" class="btn btn-secondary" id="btnBackHomeQuiz">← Voltar ao início</button>
+          <button type="button" class="btn btn-primary" id="btnFinishBlockTop">Finalizar bloco</button>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-header">
+          <span id="quizProgressText">Progresso do bloco: 0/15 respondidas</span>
+          <span id="quizModeBadge">Modo Estudo</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="quizProgressFill" style="width: 0%;"></div>
+        </div>
+        <div class="question-pills" id="questionPills"></div>
+      </div>
+
+      <div class="question-card" id="questionContainer"></div>
+
+      <div class="quiz-bottom-nav">
+        <button type="button" class="btn btn-secondary" id="btnPrevQuestion">← Anterior</button>
+        <span id="questionCounterBottom" style="font-size:0.9rem; font-weight:600; color:var(--text-secondary);">1 / 15</span>
+        <button type="button" class="btn btn-primary" id="btnNextQuestion">Próxima →</button>
+      </div>
+
+      <div class="kbd-hint">
+        Atalhos no teclado: <span class="kbd">A</span>–<span class="kbd">E</span> selecionam alternativa • <span class="kbd">Enter</span> confirma • <span class="kbd">←</span> e <span class="kbd">→</span> navegam entre questões
+      </div>
+    </section>
+
+    <!-- 3. TELA DE RESULTADO DO BLOCO -->
+    <section id="screenBlockResult" class="screen">
+      <div class="result-card" id="blockResultContent"></div>
+    </section>
+
+    <!-- 4. TELA DE RESULTADO FINAL GERAL -->
+    <section id="screenFinalResult" class="screen">
+      <div class="result-card" id="finalResultContent"></div>
+    </section>
+
+  </main>
+
+  <!-- MODAL DE CONFIRMAÇÃO PARA ZERAR PROGRESSO -->
+  <div class="modal-overlay" id="resetModal">
+    <div class="modal-card">
+      <h3>Zerar todo o progresso?</h3>
+      <p>Todas as respostas das questões objetivas, marcações e textos digitados nas questões discursivas serão apagados. Esta ação não pode ser desfeita.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="btnCancelReset">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmReset">Sim, zerar tudo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BANCO DE DADOS E QUESTÕES (SEPARADOS POR BLOCO) -->
+  <script src="js/dados/blocos.js"></script>
+  <script src="js/dados/bloco1_precificacao.js"></script>
+  <script src="js/dados/bloco2_macroeconomia.js"></script>
+  <script src="js/dados/bloco3_amortizacao.js"></script>
+  <script src="js/dados/bloco4_alavancagem.js"></script>
+  <script src="js/questoes.js"></script>
+
+  <!-- MÓDULOS DA APLICAÇÃO (ESTADO, RENDERIZAÇÃO E EVENTOS) -->
+  <script src="js/estado.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
