@@ -44,13 +44,14 @@ function renderizarTelaInicial() {
           </div>
         </div>
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.9rem;">
+          ${estado.modo === "estudo" ? `
           <button type="button" class="btn btn-secondary" style="flex:1;" data-study-block="${bloco.numero}">
             📖 Estudar Resumo
-          </button>
+          </button>` : ""}
           <button type="button" class="btn btn-primary" style="flex:1;" data-start-block="${bloco.numero}">
-            ✍️ ${rotuloBotao} Questões
+            ${estado.modo === "prova" ? `📝 ${rotuloBotao} Prova` : `✍️ ${rotuloBotao} Questões`}
           </button>
-          ${resumo.respondidasTotal > 0 ? `<button type="button" class="btn btn-secondary" data-result-block="${bloco.numero}" title="Ver resultado do bloco">Resultado</button>` : ""}
+          ${resumo.respondidasTotal > 0 ? `<button type="button" class="btn btn-secondary" data-result-block="${bloco.numero}" title="Finalizar e ver nota">Finalizar / Nota</button>` : ""}
         </div>
       </div>
     `;
@@ -86,17 +87,21 @@ function atualizarCabecalhoProgressoBloco() {
   const infoBloco = BLOCOS_INFO.find(b => b.numero === blocoAtivo);
   const questoes = obterQuestoesDoBloco(blocoAtivo);
   const resumo = calcularResumoBloco(blocoAtivo);
+  const podeMostrarCoresGabarito = (estado.modo === "estudo") || estado.blocosFinalizados[blocoAtivo];
 
   document.getElementById("quizBlockTitle").textContent = `Bloco ${infoBloco.numero}: ${infoBloco.titulo}`;
-  document.getElementById("quizBlockSubtitle").textContent = `10 questões objetivas + 5 discursivas na mesma página (basta clicar na alternativa para responder)`;
-  document.getElementById("quizProgressText").textContent = `Progresso do bloco: ${resumo.respondidasTotal}/${questoes.length} respondidas (${resumo.acertosObjetivas}/10 acertos nas objetivas)`;
+  document.getElementById("quizBlockSubtitle").textContent = podeMostrarCoresGabarito
+    ? `Modo Estudo: toque em qualquer alternativa para corrigir na hora (verde = certo, vermelho = errado)`
+    : `Modo Prova: marque suas alternativas abaixo e clique em "Finalizar bloco" para liberar o gabarito`;
+  document.getElementById("quizProgressText").textContent = podeMostrarCoresGabarito
+    ? `Progresso do bloco: ${resumo.respondidasTotal}/${questoes.length} respondidas (${resumo.acertosObjetivas}/10 acertos nas objetivas)`
+    : `Progresso da prova: ${resumo.respondidasTotal}/${questoes.length} marcadas (gabarito oculto no Modo Prova)`;
   document.getElementById("quizProgressFill").style.width = `${Math.round((resumo.respondidasTotal / questoes.length) * 100)}%`;
   atualizarBotoesModo();
 
   // Renderiza bolinhas numeradas (1 a 15) que rolam até a questão correspondente
   const pillsContainer = document.getElementById("questionPills");
   pillsContainer.innerHTML = "";
-  const podeMostrarCoresGabarito = (estado.modo === "estudo") || estado.blocosFinalizados[blocoAtivo];
 
   questoes.forEach((q, idx) => {
     const pill = document.createElement("button");
@@ -161,11 +166,12 @@ function classeDificuldade(dif) {
 function renderizarQuestaoObjetivaNoCard(cardEl, questao, idx) {
   const st = obterEstadoObjetiva(questao.id);
   const letras = ["A", "B", "C", "D", "E"];
+  const emModoProvaAtivo = (estado.modo === "prova" && !estado.blocosFinalizados[blocoAtivo]);
   const mostrarGabaritoAgora =
-    st.revelouResposta ||
-    (st.confirmada && (estado.modo === "estudo" || estado.blocosFinalizados[blocoAtivo]));
+    !emModoProvaAtivo && (st.revelouResposta || st.confirmada);
 
-  const bloqueada = st.confirmada;
+  // No Modo Estudo (ou após finalizar a prova), bloqueia após responder; no Modo Prova ativo, permite trocar de opção
+  const bloqueada = !emModoProvaAtivo && st.confirmada;
 
   // Destaca o card inteiro em verde (acerto) ou vermelho (erro) quando corrigido
   cardEl.classList.remove("card-correct", "card-wrong");
@@ -178,6 +184,8 @@ function renderizarQuestaoObjetivaNoCard(cardEl, questao, idx) {
       cardEl.classList.add("card-wrong");
       seloStatusHTML = `<span class="status-pill-card wrong">✗ Errou</span>`;
     }
+  } else if (emModoProvaAtivo && st.confirmada && st.selecionada !== null) {
+    seloStatusHTML = `<span class="tag tipo" style="margin-left:auto;">📝 Marcada: ${letras[st.selecionada]}</span>`;
   }
 
   let opcoesHTML = "";
@@ -234,14 +242,29 @@ function renderizarQuestaoObjetivaNoCard(cardEl, questao, idx) {
         </div>
       `;
     }
-  } else if (st.confirmada && estado.modo === "prova" && !estado.blocosFinalizados[blocoAtivo]) {
+  } else if (emModoProvaAtivo && st.confirmada && st.selecionada !== null) {
     feedbackHTML = `
       <div class="feedback-box neutral">
-        <div class="feedback-title">🔒 Alternativa ${letras[st.selecionada]} registrada</div>
-        <div class="feedback-line">No <strong>Modo Prova</strong>, o gabarito aparecerá ao clicar em <em>"Finalizar bloco"</em>.</div>
+        <div class="feedback-title">🔒 Alternativa ${letras[st.selecionada]} anotada na folha de prova</div>
+        <div class="feedback-line">Você pode tocar em outra letra se quiser mudar sua resposta. O gabarito (verde/vermelho) aparecerá quando clicar em <strong>"Finalizar bloco"</strong>.</div>
       </div>
     `;
   }
+
+  const acoesHTML = emModoProvaAtivo
+    ? `
+      <div class="question-actions">
+        ${st.confirmada ? `<button type="button" class="btn btn-secondary" data-retry-btn="1">↺ Limpar marcação</button>` : ""}
+      </div>
+    `
+    : `
+      <div class="question-actions">
+        <button type="button" class="btn btn-secondary" data-reveal-btn="1">
+          ${st.revelouResposta ? "Ocultar resposta" : "Ver resposta"}
+        </button>
+        ${st.confirmada ? `<button type="button" class="btn btn-secondary" data-retry-btn="1">↺ Refazer questão</button>` : ""}
+      </div>
+    `;
 
   cardEl.innerHTML = `
     <div class="question-meta">
@@ -252,19 +275,14 @@ function renderizarQuestaoObjetivaNoCard(cardEl, questao, idx) {
     </div>
     <div class="question-statement">${questao.enunciado}</div>
     <div class="options-list">${opcoesHTML}</div>
-    <div class="question-actions">
-      <button type="button" class="btn btn-secondary" data-reveal-btn="1">
-        ${st.revelouResposta ? "Ocultar resposta" : "Ver resposta"}
-      </button>
-      ${st.confirmada ? `<button type="button" class="btn btn-secondary" data-retry-btn="1">↺ Refazer questão</button>` : ""}
-    </div>
+    ${acoesHTML}
     ${feedbackHTML}
   `;
 
-  // Ao tocar/clicar na alternativa, já confirma e mostra verde/vermelho na hora!
+  // Ao tocar/clicar na alternativa: no Modo Estudo corrige na hora; no Modo Prova marca/troca a opção
   cardEl.querySelectorAll("[data-opt-index]").forEach(btn => {
     btn.addEventListener("click", () => {
-      if (st.confirmada) return;
+      if (bloqueada) return;
       st.selecionada = Number(btn.getAttribute("data-opt-index"));
       st.confirmada = true;
       salvarEstado();

@@ -127,5 +127,6 @@ function inicializarEventos() {
 // Inicialização ao carregar a página
 aplicarTema();
 atualizarBotoesModo();
+gerenciarCronometroModo();
 inicializarEventos();
 renderizarTelaInicial();

@@ -1051,3 +1051,65 @@ body {
     font-size: 1rem;
   }
 }
+
+/* ==========================================================================
+   BANNER INTERATIVO DE MODO ESTUDO vs. MODO PROVA E CRONÔMETRO
+   ========================================================================== */
+.mode-banner {
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  border: 1.5px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.mode-banner.estudo {
+  background: var(--success-bg);
+  border-color: var(--success);
+  color: var(--success-text);
+}
+
+.mode-banner.prova {
+  background: var(--warning-bg);
+  border-color: var(--warning);
+  color: var(--warning-text);
+}
+
+.mode-banner-info {
+  flex: 1;
+  min-width: 240px;
+}
+
+.mode-banner-title {
+  font-weight: 800;
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.mode-banner-desc {
+  font-size: 0.86rem;
+  opacity: 0.92;
+}
+
+.exam-timer-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-weight: 800;
+  font-family: monospace;
+  font-size: 1rem;
+}
