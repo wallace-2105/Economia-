@@ -904,3 +904,94 @@ body {
     width: 100%;
   }
 }
+
+/* ==========================================================================
+   ÁREA DE ENSINO (RESUMO TEÓRICO DOS 4 BLOCOS)
+   ========================================================================== */
+.study-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.study-tab-btn {
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.study-tab-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.study-tab-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.study-block-section {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.study-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.study-topic-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.study-topic-card h3 {
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  margin-bottom: 0.55rem;
+}
+
+.study-topic-formula {
+  display: inline-block;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.8rem;
+  font-family: "Cambria Math", "Times New Roman", Georgia, serif;
+  font-weight: 700;
+  font-size: 0.98rem;
+  margin-bottom: 0.65rem;
+}
+
+.study-topic-list {
+  padding-left: 1.2rem;
+  font-size: 0.94rem;
+  color: var(--text-primary);
+}
+
+.study-topic-list li {
+  margin-bottom: 0.45rem;
+}

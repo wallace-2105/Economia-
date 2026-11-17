@@ -43,15 +43,24 @@ function renderizarTelaInicial() {
             <div class="mini-progress-bar" style="width: ${percProgresso}%;"></div>
           </div>
         </div>
-        <div style="display:flex; gap:0.5rem; margin-top:0.9rem;">
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.9rem;">
+          <button type="button" class="btn btn-secondary" style="flex:1;" data-study-block="${bloco.numero}">
+            📖 Estudar Resumo
+          </button>
           <button type="button" class="btn btn-primary" style="flex:1;" data-start-block="${bloco.numero}">
-            ${rotuloBotao} Bloco ${bloco.numero}
+            ✍️ ${rotuloBotao} Questões
           </button>
           ${resumo.respondidasTotal > 0 ? `<button type="button" class="btn btn-secondary" data-result-block="${bloco.numero}" title="Ver resultado do bloco">Resultado</button>` : ""}
         </div>
       </div>
     `;
     grid.appendChild(card);
+  });
+
+  grid.querySelectorAll("[data-study-block]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      abrirAreaEnsino(Number(btn.getAttribute("data-study-block")));
+    });
   });
 
   grid.querySelectorAll("[data-start-block]").forEach(btn => {
@@ -487,4 +496,80 @@ function renderizarResultadoGeral() {
   });
 
   document.getElementById("btnFinalBackHome").addEventListener("click", () => mostrarTela("home"));
+}
+
+/* ==========================================================================
+   RENDERIZAÇÃO: ÁREA DE ENSINO (RESUMO TEÓRICO DOS 4 BLOCOS)
+   ========================================================================== */
+let filtroBlocoEstudo = 0; // 0 = todos os blocos, 1..4 = bloco específico
+
+function renderizarAreaEnsino(numBloco = filtroBlocoEstudo) {
+  filtroBlocoEstudo = numBloco;
+  const container = document.getElementById("studyContentContainer");
+  if (!container || typeof RESUMO_TEORICO === "undefined") return;
+
+  const abas = [
+    { id: 0, rotulo: "📚 Todos os 4 Blocos" },
+    { id: 1, rotulo: "Bloco 1: Precificação" },
+    { id: 2, rotulo: "Bloco 2: Macroeconomia" },
+    { id: 3, rotulo: "Bloco 3: Amortização" },
+    { id: 4, rotulo: "Bloco 4: Alavancagem" }
+  ];
+
+  const abasHTML = abas.map(a => `
+    <button type="button" class="study-tab-btn ${filtroBlocoEstudo === a.id ? "active" : ""}" data-tab-bloco="${a.id}">
+      ${a.rotulo}
+    </button>
+  `).join("");
+
+  const blocosFiltrados = filtroBlocoEstudo === 0
+    ? RESUMO_TEORICO
+    : RESUMO_TEORICO.filter(b => b.bloco === filtroBlocoEstudo);
+
+  const blocosHTML = blocosFiltrados.map(bloco => {
+    const topicosHTML = bloco.topicos.map(t => {
+      const formulaHTML = t.formula ? `<div class="study-topic-formula">${t.formula}</div>` : "";
+      const itensHTML = t.itens.map(item => `<li>${item}</li>`).join("");
+      return `
+        <div class="study-topic-card">
+          <h3>${t.titulo}</h3>
+          ${formulaHTML}
+          <ul class="study-topic-list">${itensHTML}</ul>
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <div class="study-block-section">
+        <div class="study-block-header">
+          <div>
+            <span class="block-badge">Material de Estudo • Bloco ${bloco.bloco}</span>
+            <h2>${bloco.titulo}</h2>
+            <p style="font-size:0.9rem; color:var(--text-secondary);">${bloco.subtitulo}</p>
+          </div>
+          <button type="button" class="btn btn-primary" data-practice-from-study="${bloco.bloco}">
+            ✍️ Praticar Questões do Bloco ${bloco.bloco} →
+          </button>
+        </div>
+        ${topicosHTML}
+      </div>
+    `;
+  }).join("");
+
+  container.innerHTML = `
+    <div class="study-tabs">${abasHTML}</div>
+    ${blocosHTML}
+  `;
+
+  container.querySelectorAll("[data-tab-bloco]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      renderizarAreaEnsino(Number(btn.getAttribute("data-tab-bloco")));
+    });
+  });
+
+  container.querySelectorAll("[data-practice-from-study]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      abrirBloco(Number(btn.getAttribute("data-practice-from-study")), 0);
+    });
+  });
 }

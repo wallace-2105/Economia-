@@ -16,6 +16,10 @@
       </div>
 
       <div class="topbar-controls">
+        <button type="button" class="icon-btn" id="btnAreaEnsinoTop" title="Estudar resumo completo da matéria">
+          📚 Área de Ensino
+        </button>
+
         <div class="mode-switch" role="group" aria-label="Modo do simulado">
           <button type="button" class="mode-btn active" id="modeEstudoBtn" title="Gabarito imediato ao confirmar">Modo Estudo</button>
           <button type="button" class="mode-btn" id="modeProvaBtn" title="Gabarito liberado ao finalizar o bloco">Modo Prova</button>
@@ -40,15 +44,29 @@
       <div class="hero-header">
         <div class="hero-title">
           <h1>Simulado de Economia</h1>
-          <p>4 blocos temáticos • 40 questões objetivas + 20 questões discursivas (60 questões no total)</p>
+          <p>Área de Ensino completa + 4 blocos temáticos • 40 questões objetivas + 20 discursivas (60 questões)</p>
         </div>
         <div class="hero-actions">
+          <button type="button" class="btn btn-secondary" id="btnAreaEnsinoHome">📚 Área de Ensino (Resumo)</button>
           <button type="button" class="btn btn-primary" id="btnResultadoGeralHome">Ver Resultado Geral</button>
           <button type="button" class="btn btn-danger" id="btnResetAll">Zerar progresso</button>
         </div>
       </div>
 
       <div class="blocks-grid" id="blocksGrid"></div>
+    </section>
+
+    <!-- 1.5 TELA DA ÁREA DE ENSINO (RESUMO COMPLETO DA MATÉRIA) -->
+    <section id="screenStudy" class="screen">
+      <div class="quiz-top-nav">
+        <div class="block-header-info">
+          <h2>📚 Área de Ensino — Resumo Completo para a Prova</h2>
+          <span>Todo o conteúdo teórico, fórmulas e exemplos práticos organizados pelos 4 blocos</span>
+        </div>
+        <button type="button" class="btn btn-secondary" id="btnBackHomeStudy">← Voltar ao início</button>
+      </div>
+
+      <div id="studyContentContainer"></div>
     </section>
 
     <!-- 2. TELA DE QUESTÕES DO BLOCO -->
@@ -59,6 +77,7 @@
           <span id="quizBlockSubtitle">Questão 1 de 15</span>
         </div>
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <button type="button" class="btn btn-secondary" id="btnStudyFromQuiz">📖 Ver Resumo do Bloco</button>
           <button type="button" class="btn btn-secondary" id="btnBackHomeQuiz">← Voltar ao início</button>
           <button type="button" class="btn btn-primary" id="btnFinishBlockTop">Finalizar bloco</button>
         </div>
@@ -112,8 +131,9 @@
     </div>
   </div>
 
-  <!-- BANCO DE DADOS E QUESTÕES (SEPARADOS POR BLOCO) -->
+  <!-- BANCO DE DADOS, RESUMO TEÓRICO E QUESTÕES (SEPARADOS POR BLOCO) -->
   <script src="js/dados/blocos.js"></script>
+  <script src="js/dados/resumo_teorico.js"></script>
   <script src="js/dados/bloco1_precificacao.js"></script>
   <script src="js/dados/bloco2_macroeconomia.js"></script>
   <script src="js/dados/bloco3_amortizacao.js"></script>

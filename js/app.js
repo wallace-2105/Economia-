@@ -7,6 +7,9 @@ function mostrarTela(nomeTela) {
   if (nomeTela === "home") {
     document.getElementById("screenHome").classList.add("active");
     renderizarTelaInicial();
+  } else if (nomeTela === "study") {
+    document.getElementById("screenStudy").classList.add("active");
+    renderizarAreaEnsino(filtroBlocoEstudo);
   } else if (nomeTela === "quiz") {
     document.getElementById("screenQuiz").classList.add("active");
     renderizarTelaQuiz();
@@ -18,6 +21,11 @@ function mostrarTela(nomeTela) {
     renderizarResultadoGeral();
   }
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function abrirAreaEnsino(numBloco = 0) {
+  filtroBlocoEstudo = numBloco;
+  mostrarTela("study");
 }
 
 function abrirBloco(numBloco, indiceInicial = null) {
@@ -42,11 +50,23 @@ function abrirBloco(numBloco, indiceInicial = null) {
    EVENTOS GLOBAIS E ATALHOS DE TECLADO
    ========================================================================== */
 function inicializarEventos() {
-  // Navegação Topo
+  // Navegação Topo e Área de Ensino
   document.getElementById("brandHomeBtn").addEventListener("click", () => mostrarTela("home"));
   document.getElementById("btnBackHomeQuiz").addEventListener("click", () => mostrarTela("home"));
   document.getElementById("btnVerResultadoGeralTop").addEventListener("click", () => mostrarTela("finalResult"));
   document.getElementById("btnResultadoGeralHome").addEventListener("click", () => mostrarTela("finalResult"));
+
+  const btnEnsinoTop = document.getElementById("btnAreaEnsinoTop");
+  if (btnEnsinoTop) btnEnsinoTop.addEventListener("click", () => abrirAreaEnsino(0));
+
+  const btnEnsinoHome = document.getElementById("btnAreaEnsinoHome");
+  if (btnEnsinoHome) btnEnsinoHome.addEventListener("click", () => abrirAreaEnsino(0));
+
+  const btnBackStudy = document.getElementById("btnBackHomeStudy");
+  if (btnBackStudy) btnBackStudy.addEventListener("click", () => mostrarTela("home"));
+
+  const btnStudyQuiz = document.getElementById("btnStudyFromQuiz");
+  if (btnStudyQuiz) btnStudyQuiz.addEventListener("click", () => abrirAreaEnsino(blocoAtivo));
 
   // Alternância de Modo Estudo / Prova
   document.getElementById("modeEstudoBtn").addEventListener("click", () => definirModo("estudo"));
